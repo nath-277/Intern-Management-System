@@ -1,5 +1,4 @@
 node_modules/
-database/interns.db
 .DS_Store
 .env
 temp/

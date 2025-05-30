@@ -1,4 +1,4 @@
-require('dotenv').config({ path: `../Siwes Registeration/.env`});
+require('dotenv').config({ path: `../.env`});
 const sqlite3 = require('sqlite3').verbose();
 const fs = require('fs');
 const csv = require('csv-parse');
