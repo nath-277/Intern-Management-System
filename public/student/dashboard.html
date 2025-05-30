@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Intern Portal</title>
+  <script src="../js/tailwind.js"></script>
+  <link href="../css/tailwind.min.css" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    }
+  </script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen transition-colors duration-200">
+  <div class="container mx-auto p-4 max-w-4xl">
+    <!-- Header with Dark Mode Toggle -->
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-2xl font-bold text-gray-800 dark:text-white">ICT Intern Portal</h1>
+      <button onclick="toggleDarkMode()" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+        <span id="darkModeIcon">🌓</span>
+      </button>
+    </div>
+
+    <!-- Main Card -->
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
+      <!-- Search Section -->
+      <div class="mb-8">
+        <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">Find Your Details</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div class="relative">
+            <label class="block mb-2 text-gray-700 dark:text-gray-300">Full Name</label>
+            <input type="text" id="studentName" placeholder="Start typing your name..."
+                   class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+            <div id="suggestions" class="hidden absolute z-10 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded shadow-md w-full mt-1 max-h-60 overflow-auto"></div>
+          </div>
+          <div>
+            <label class="block mb-2 text-gray-700 dark:text-gray-300">Year</label>
+            <input type="number" id="studentYear" 
+                   class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+          </div>
+        </div>
+        <button onclick="searchDetails()" 
+                class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded transition">
+          Search My Details
+        </button>
+      </div>
+
+      <!-- Results Section -->
+      <div id="results" class="hidden">
+        <div class="flex justify-between items-center mb-4 border-b pb-2">
+          <h2 class="text-xl font-bold text-gray-800 dark:text-white">Your Internship Details</h2>
+          <button onclick="printDetails()" 
+                  class="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 px-3 py-1 rounded text-sm">
+            Print/Export
+          </button>
+        </div>
+
+        <!-- Details Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded">
+            <p class="font-semibold text-gray-700 dark:text-gray-300">Name:</p>
+            <p id="detailName" class="text-gray-900 dark:text-white">-</p>
+          </div>
+          <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded">
+            <p class="font-semibold text-gray-700 dark:text-gray-300">Year:</p>
+            <p id="detailYear" class="text-gray-900 dark:text-white">-</p>
+          </div>
+          <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded">
+            <p class="font-semibold text-gray-700 dark:text-gray-300">Course:</p>
+            <p id="detailCourse" class="text-gray-900 dark:text-white">-</p>
+          </div>
+          <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded">
+            <p class="font-semibold text-gray-700 dark:text-gray-300">Designation:</p>
+            <p id="detailDesignation" class="text-gray-900 dark:text-white">-</p>
+          </div>
+          <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded">
+            <p class="font-semibold text-gray-700 dark:text-gray-300">Supervisor:</p>
+            <p id="detailSupervisor" class="text-gray-900 dark:text-white">-</p>
+          </div>
+          <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded">
+            <p class="font-semibold text-gray-700 dark:text-gray-300">Status:</p>
+            <p id="detailStatus" class="text-gray-900 dark:text-white">-</p>
+          </div>
+        </div>
+
+        <!-- QR Code Section -->
+        <div id="qrSection" class="hidden text-center border-t pt-4">
+          <h3 class="font-bold mb-2 text-gray-800 dark:text-white">Quick Access QR Code</h3>
+          <div id="qrCode" class="flex justify-center"></div>
+          <p class="text-sm mt-2 text-gray-600 dark:text-gray-400">Scan to save your profile link</p>
+        </div>
+
+        <!-- Tasks Section (Optional) -->
+        <div id="taskSection" class="hidden mt-6">
+          <h3 class="font-bold mb-2 text-gray-800 dark:text-white">Your Tasks</h3>
+          <ul id="taskList" class="list-disc pl-5 space-y-1 text-gray-700 dark:text-gray-300"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    // Dark Mode Toggle
+    function toggleDarkMode() {
+      document.documentElement.classList.toggle('dark');
+      localStorage.setItem('darkMode', document.documentElement.classList.contains('dark'));
+      updateDarkModeIcon();
+    }
+
+    function updateDarkModeIcon() {
+      const icon = document.getElementById('darkModeIcon');
+      icon.textContent = document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
+    }
+
+    // Check for saved dark mode preference
+    if (localStorage.getItem('darkMode') === 'true') {
+      document.documentElement.classList.add('dark');
+    }
+    updateDarkModeIcon();
+
+    // Debounced Search Suggestions
+    let debounceTimer;
+    document.getElementById('studentName').addEventListener('input', (e) => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => fetchSuggestions(e.target.value), 300);
+    });
+
+    async function fetchSuggestions(query) {
+      if (query.length < 2) {
+        document.getElementById('suggestions').classList.add('hidden');
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/api/suggestions?q=${encodeURIComponent(query)}`);
+        const names = await response.json();
+        const suggestionsEl = document.getElementById('suggestions');
+        
+        suggestionsEl.innerHTML = names.map(name => `
+          <div class="p-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer" 
+               onclick="selectSuggestion('${name.replace(/'/g, "\\'")}')">
+            ${name}
+          </div>
+        `).join('');
+        
+        suggestionsEl.classList.toggle('hidden', names.length === 0);
+      } catch (error) {
+        console.error('Error fetching suggestions:', error);
+      }
+    }
+
+    function selectSuggestion(name) {
+      document.getElementById('studentName').value = name;
+      document.getElementById('suggestions').classList.add('hidden');
+    }
+
+    // Main Search Function
+    const cache = {};
+    async function searchDetails() {
+      const name = document.getElementById('studentName').value.trim();
+      const year = document.getElementById('studentYear').value;
+      
+      if (!name || !year) {
+        alert('Please enter both name and year');
+        return;
+      }
+
+      const cacheKey = `${name}-${year}`;
+      
+      // Check cache first
+      if (cache[cacheKey]) {
+        displayResults(cache[cacheKey]);
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/student?name=${encodeURIComponent(name)}&year=${year}`);
+        const data = await response.json();
+        
+        if (!data.name) {
+          alert('No matching records found');
+          return;
+        }
+
+        // Cache the result
+        cache[cacheKey] = data;
+        displayResults(data);
+        
+      } catch (error) {
+        console.error('Error searching details:', error);
+        alert('An error occurred while searching');
+      }
+    }
+
+    // Display Results
+    function displayResults(data) {
+      document.getElementById('results').classList.remove('hidden');
+      
+      // Basic Details
+      document.getElementById('detailName').textContent = data.name || '-';
+      document.getElementById('detailYear').textContent = data.year || '-';
+      document.getElementById('detailCourse').textContent = data.course || '-';
+      document.getElementById('detailDesignation').textContent = data.designation || '-';
+      document.getElementById('detailSupervisor').textContent = data.supervisor || 'Not assigned';
+      document.getElementById('detailStatus').textContent = data.status || 'Active';
+
+      // Load QR code library dynamically
+      if (!window.QRCode) {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js';
+        script.onload = () => generateQR(`${window.location.href}?token=${data.token}`);
+        document.head.appendChild(script);
+      } else {
+        generateQR(`${window.location.href}?token=${data.token}`);
+      }
+
+      // Show tasks if available
+      if (data.tasks && data.tasks.length > 0) {
+        document.getElementById('taskSection').classList.remove('hidden');
+        document.getElementById('taskList').innerHTML = data.tasks.map(task => `
+          <li class="${task.completed ? 'line-through text-gray-500' : ''}">${task.description}</li>
+        `).join('');
+      } else {
+        document.getElementById('taskSection').classList.add('hidden');
+      }
+    }
+
+    // QR Code Generation
+    function generateQR(url) {
+      const qrContainer = document.getElementById('qrCode');
+      qrContainer.innerHTML = '';
+      
+      QRCode.toCanvas(url, { width: 150 }, (error, canvas) => {
+        if (error) {
+          console.error('QR generation error:', error);
+          return;
+        }
+        qrContainer.appendChild(canvas);
+        document.getElementById('qrSection').classList.remove('hidden');
+      });
+    }
+
+    // Print/Export Function
+    function printDetails() {
+      const printWindow = window.open('', '', 'width=800,height=600');
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Internship Record - ${document.getElementById('detailName').textContent}</title>
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; }
+              h1 { color: #2d3748; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; }
+              .detail-row { display: flex; margin-bottom: 0.5rem; }
+              .detail-label { font-weight: bold; min-width: 120px; }
+            </style>
+          </head>
+          <body>
+            <h1>Internship Record</h1>
+            <div class="detail-row">
+              <span class="detail-label">Name:</span>
+              <span>${document.getElementById('detailName').textContent}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Year:</span>
+              <span>${document.getElementById('detailYear').textContent}</span>
+            </div>
+            <!-- Include all other details -->
+            <p style="margin-top: 2rem; font-size: 0.9rem; color: #718096;">
+              Generated on ${new Date().toLocaleDateString()}
+            </p>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.focus();
+    }
+  </script>
+</body>
+</html>
