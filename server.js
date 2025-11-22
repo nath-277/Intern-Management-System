@@ -1,4 +1,4 @@
-require('dotenv').config({ path: './.env' });
+require('dotenv').config( );
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const session = require('express-session');
